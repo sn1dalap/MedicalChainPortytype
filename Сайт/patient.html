@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница пациента</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #qr-scanner {
+            display: none;
+            margin-top: 20px;
+        }
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+        #result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <!-- Добавлена ссылка на страницу с новостями -->
+            <a class="navbar-brand" href="news.html">Цепь жизни</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="profilePatient.html">Профиль</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="scanQR()">Сканировать QR-код</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="medical_card.html">Моя мед карта</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Добро пожаловать, пациент!</h2>
+        <p>Используйте меню для навигации.</p>
+
+        <!-- Область для сканирования QR-кода -->
+        <div id="qr-scanner">
+            <video id="video" autoplay></video>
+            <div id="result"></div>
+            <button class="btn btn-danger mt-3" onclick="stopScan()">Остановить сканирование</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        let videoStream; // Поток с камеры
+        let videoElement; // Элемент <video>
+        let resultElement; // Элемент для вывода результата
+
+        // Функция для запуска сканирования QR-кода
+        function scanQR() {
+            // Показываем область сканирования
+            const qrScanner = document.getElementById('qr-scanner');
+            qrScanner.style.display = 'block';
+
+            // Инициализация элементов
+            videoElement = document.getElementById('video');
+            resultElement = document.getElementById('result');
+
+            // Запрашиваем доступ к камере
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(stream) {
+                    videoStream = stream;
+                    videoElement.srcObject = stream;
+                    videoElement.play();
+                    requestAnimationFrame(scanFrame); // Запускаем сканирование кадров
+                })
+                .catch(function(error) {
+                    alert("Ошибка доступа к камере: " + error.message);
+                });
+        }
+
+        // Функция для остановки сканирования
+        function stopScan() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop()); // Останавливаем поток
+            }
+            const qrScanner = document.getElementById('qr-scanner');
+            qrScanner.style.display = 'none'; // Скрываем область сканирования
+            resultElement.textContent = ''; // Очищаем результат
+        }
+
+        // Функция для обработки каждого кадра
+        function scanFrame() {
+            if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                // Анализируем изображение с помощью jsQR
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'dontInvert',
+                });
+
+                // Если QR-код найден
+                if (code) {
+                    resultElement.textContent = "Найден QR-код: " + code.data;
+                    stopScan(); // Останавливаем сканирование после успешного распознавания
+                } else {
+                    resultElement.textContent = "Сканирование...";
+                }
+            }
+            requestAnimationFrame(scanFrame); // Продолжаем сканирование
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя мед карта</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .editable {
+            border: 1px solid #ddd;
+            padding: 5px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        .editable:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .read-only {
+            border: none;
+            padding: 5px;
+            margin: 5px 0;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Цепь жизни</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Моя мед карта</h2>
+        <div class="mt-3">
+            <!-- Вкладки -->
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#title" data-bs-toggle="tab">Титульная страница</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#history" data-bs-toggle="tab">История болезней</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#tests" data-bs-toggle="tab">Результаты анализов</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#prescriptions" data-bs-toggle="tab">Назначения врачей</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#vaccinations" data-bs-toggle="tab">Прививки</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#contraindications" data-bs-toggle="tab">Противопоказания</a>
+                </li>
+            </ul>
+
+            <!-- Содержимое вкладок -->
+            <div class="tab-content mt-3">
+                <!-- Титульная страница -->
+                <div class="tab-pane fade show active" id="title">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Титульная страница
+                        </div>
+                        <div class="card-body">
+                            <p><strong>ФИО:</strong> <span class="editable read-only" id="fullName">Петров Петр Петрович</span></p>
+                            <p><strong>Дата рождения:</strong> <span class="editable read-only" id="birthDate">01.01.1990</span></p>
+                            <p><strong>Пол:</strong> <span class="editable read-only" id="gender">Мужской</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- История болезней -->
+                <div class="tab-pane fade" id="history">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            История болезней
+                        </div>
+                        <div class="card-body">
+                            <p class="editable read-only" id="diseaseHistory">Информация о перенесенных заболеваниях.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Результаты анализов -->
+                <div class="tab-pane fade" id="tests">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Результаты анализов
+                        </div>
+                        <div class="card-body">
+                            <p class="editable read-only" id="testResults">Результаты лабораторных анализов.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Назначения врачей -->
+                <div class="tab-pane fade" id="prescriptions">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Назначения врачей
+                        </div>
+                        <div class="card-body">
+                            <p class="editable read-only" id="doctorPrescriptions">Назначения и рекомендации врачей.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Прививки -->
+                <div class="tab-pane fade" id="vaccinations">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Прививки
+                        </div>
+                        <div class="card-body">
+                            <p class="editable read-only" id="vaccinationsInfo">Информация о вакцинации.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Противопоказания -->
+                <div class="tab-pane fade" id="contraindications">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Противопоказания
+                        </div>
+                        <div class="card-body">
+                            <p class="editable read-only" id="contraindicationsInfo">Противопоказания и ограничения.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопка сохранения (только для врача) -->
+            <div class="mt-3" id="saveButtonContainer">
+                <button class="btn btn-primary" onclick="saveChanges()">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Определяем роль пользователя (врач или пациент)
+        const userRole = localStorage.getItem('userRole') || 'patient'; // По умолчанию пациент
+
+        // Функция для включения редактирования (только для врача)
+        function enableEditing() {
+            if (userRole === 'doctor') {
+                const editableElements = document.querySelectorAll('.editable');
+                editableElements.forEach(element => {
+                    element.classList.remove('read-only');
+                    element.setAttribute('contenteditable', 'true');
+                });
+                document.getElementById('saveButtonContainer').style.display = 'block'; // Показываем кнопку сохранения
+            } else {
+                const editableElements = document.querySelectorAll('.editable');
+                editableElements.forEach(element => {
+                    element.classList.add('read-only');
+                    element.setAttribute('contenteditable', 'false');
+                });
+                document.getElementById('saveButtonContainer').style.display = 'none'; // Скрываем кнопку сохранения
+            }
+        }
+
+        // Функция для сохранения изменений
+        function saveChanges() {
+            const editableElements = document.querySelectorAll('.editable');
+            editableElements.forEach(element => {
+                localStorage.setItem(element.id, element.textContent); // Сохраняем изменения в localStorage
+            });
+            alert("Изменения сохранены!");
+        }
+
+        // Загружаем сохраненные данные (если есть)
+        window.onload = function() {
+            const editableElements = document.querySelectorAll('.editable');
+            editableElements.forEach(element => {
+                const savedValue = localStorage.getItem(element.id);
+                if (savedValue) {
+                    element.textContent = savedValue;
+                }
+            });
+
+            // Включаем редактирование в зависимости от роли
+            enableEditing();
+        };
+    </script>
+</body>
+</html>
