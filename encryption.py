@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet # type: ignore
+from cryptography.fernet import Fernet  # type: ignore
 
 class Encryption:
     def __init__(self):
